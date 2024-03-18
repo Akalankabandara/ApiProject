@@ -10,10 +10,42 @@ import logging
 class DataTypeApiView(APIView):
     
     logger = logging.getLogger(__name__)
+    
+    def get_data_types(self, data_list):
+        # Convert JSON data to DataFrame
+        df = pd.DataFrame(data_list)
+
+        # Log data types before inference
+        logging.info("Data types before inference:")
+        logging.info(df.dtypes)
+
+        # Infer data types
+        for col in df.columns:
+            # Attempt to convert to numeric first
+            df_converted = pd.to_numeric(df[col], errors='coerce')
+            if not df_converted.isna().all():  # If at least one value is numeric
+                df[col] = df_converted
+                continue
+
+            # Attempt to convert to datetime
+            try:
+                df[col] = pd.to_datetime(df[col], format='%Y-%m-%d')
+                continue
+            except (ValueError, TypeError):  # Corrected typo here
+                pass
+
+            # Check if the column should be categorical
+            if len(df[col].unique()) / len(df[col]) < 0.5:  # Example threshold for categorization
+                df[col] = pd.Categorical(df[col])
+
+        # Log data types after inference
+            logging.info("Data types after inference:")
+            logging.info(df.dtypes) 
+            return df.dtypes
 
     def get(self, request):
-        allDataTypes = list(DataType.objects.all().values())
-        return Response({"Message": "List of DataTypes", "DataType List": allDataTypes})
+        DType = DataType.objects.all().values()
+        return Response({"Message": "List of all predicted DataTypes", "DataType List": DType})
 
     def post(self, request):
         if isinstance(request.data, list):
@@ -38,27 +70,7 @@ class DataTypeApiView(APIView):
         logging.info("Data types before inference:")
         logging.info(df.dtypes)
 
-        for col in df.columns:
-            # Attempt to convert to numeric first
-            df_converted = pd.to_numeric(df[col], errors='coerce')
-            if not df_converted.isna().all():  # If at least one value is numeric
-                df[col] = df_converted
-                continue
-
-            # Attempt to convert to datetime
-            try:
-                df[col] = pd.to_datetime(df[col], format='%Y-%m-%d')
-                continue
-            except (ValueError, TypeError):  # Corrected typo here
-                pass
-
-            # Check if the column should be categorical
-            if len(df[col].unique()) / len(df[col]) < 0.5:  # Example threshold for categorization
-                df[col] = pd.Categorical(df[col])
-      
-        logging.info(df)
-        logging.info("\nData types after inference:")
-        logging.info(df.dtypes)
+        data_types = self.get_data_types(data_list)
         
         DType = DataType.objects.all().values()
         return Response({"Message": "New DataTypes Added!", "DataType": list(DType)})
