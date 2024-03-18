@@ -132,3 +132,26 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',  # Set the logging level as per your requirement
+            'class': 'logging.StreamHandler',
+        },
+        'file': {
+            'level': 'INFO',  # Set the logging level as per your requirement
+            'class': 'logging.FileHandler',
+            'filename': 'C:/Users/dasun/OneDrive/Desktop/Asingment/logfile.log',  # Specify the path to your log file
+        },
+    },
+    'loggers': {
+        '': {
+            'handlers': ['console', 'file'],  # Define the handlers to use for the root logger
+            'level': 'DEBUG',  # Set the logging level as per your requirement
+            'propagate': True,
+        },
+    },
+}
